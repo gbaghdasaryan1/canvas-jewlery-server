@@ -356,14 +356,14 @@ describe('OrdersService', () => {
     expect(otpService.consumeVerificationToken).not.toHaveBeenCalled();
   });
 
-  it('burns the verification token exactly once on success', async () => {
+  // OTP verification is temporarily disabled (OTP_VERIFICATION_ENABLED = false
+  // in orders.service.ts): an order is created from the phone alone and no
+  // verification token is consumed. When OTP is re-enabled, restore the
+  // "burns the verification token exactly once on success" assertion.
+  it('does not consume a verification token while OTP is disabled', async () => {
     await create(VALID_OPTIONS);
 
-    expect(otpService.consumeVerificationToken).toHaveBeenCalledTimes(1);
-    expect(otpService.consumeVerificationToken).toHaveBeenCalledWith(
-      'token',
-      '+37455123456',
-    );
+    expect(otpService.consumeVerificationToken).not.toHaveBeenCalled();
   });
 
   describe('findAll', () => {

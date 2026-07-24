@@ -33,6 +33,14 @@ import {
   isStlBuffer,
 } from './stl.validation';
 
+/**
+ * Whether order creation requires a valid OTP verification token. Temporarily
+ * disabled: orders are created from a phone number alone, with no SMS step.
+ * Flip back to `true` (and make `verificationToken` required again in
+ * CreateOrderDto) to re-enable OTP verification.
+ */
+const OTP_VERIFICATION_ENABLED = false;
+
 /** Hard ceiling on page size, regardless of what the caller asks for. */
 export const MAX_PAGE_SIZE = 200;
 const DEFAULT_PAGE_SIZE = 50;
@@ -86,7 +94,7 @@ export class OrdersService {
 
   async create(input: {
     phone: string;
-    verificationToken: string;
+    verificationToken?: string;
     optionsJson: string;
     file: Express.Multer.File;
   }): Promise<Order> {
@@ -94,12 +102,16 @@ export class OrdersService {
 
     this.assertStlFile(input.file);
 
-    // Throws 401 unless the token is valid, bound to this phone, and unused.
+    // OTP verification is temporarily disabled: an order is created from the
+    // phone number alone. When OTP_VERIFICATION_ENABLED is flipped back on this
+    // throws 401 unless the token is valid, bound to this phone, and unused.
     // Done after cheap validation so a malformed request cannot burn a token.
-    await this.otpService.consumeVerificationToken(
-      input.verificationToken,
-      input.phone,
-    );
+    if (OTP_VERIFICATION_ENABLED) {
+      await this.otpService.consumeVerificationToken(
+        input.verificationToken ?? '',
+        input.phone,
+      );
+    }
 
     const id = randomUUID();
 
