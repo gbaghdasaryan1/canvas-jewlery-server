@@ -9,6 +9,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { validateEnv } from './config/env.validation';
 import { OrdersModule } from './orders/orders.module';
 import { OtpModule } from './otp/otp.module';
+import { TranslationsModule } from './translations/translations.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { OtpModule } from './otp/otp.module';
     }),
     OtpModule,
     OrdersModule,
+    TranslationsModule,
   ],
   controllers: [AppController],
   providers: [

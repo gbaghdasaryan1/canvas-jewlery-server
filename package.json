@@ -21,7 +21,8 @@
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
-    "migration:generate": "npm run typeorm -- migration:generate"
+    "migration:generate": "npm run typeorm -- migration:generate",
+    "seed:translations": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' ts-node src/translations/seed/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1093.0",
