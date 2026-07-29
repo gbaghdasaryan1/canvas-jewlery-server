@@ -1,20 +1,18 @@
 import 'reflect-metadata';
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
+import { buildDbConnectionOptions } from '../config/database.config';
 
 config();
 
 /**
- * Used by the TypeORM CLI for migrations. The running app builds its own
- * connection from ConfigService in app.module.ts — keep the two in sync.
+ * Used by the TypeORM CLI for migrations. Connection settings come from the same
+ * helper the running app uses (app.module.ts), so the two never drift. Works
+ * both under ts-node (dev: `${__dirname}` is src/database) and compiled
+ * (prod on Heroku: `${__dirname}` is dist/database) via the `.ts,.js` globs.
  */
 export default new DataSource({
-  type: 'postgres',
-  host: process.env.DB_HOST ?? 'localhost',
-  port: Number(process.env.DB_PORT ?? 5432),
-  username: process.env.DB_USERNAME ?? 'postgres',
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE ?? 'canvas_jewelry',
+  ...buildDbConnectionOptions(),
   entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
   migrations: [`${__dirname}/migrations/*{.ts,.js}`],
   synchronize: false,

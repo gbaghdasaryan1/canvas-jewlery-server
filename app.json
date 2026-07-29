@@ -1,0 +1,43 @@
+{
+  "name": "Canvas Jewelry API",
+  "description": "NestJS API for the Canvas Jewelry storefront — orders, OTP, and translations.",
+  "keywords": ["nestjs", "typeorm", "postgres"],
+  "stack": "heroku-24",
+  "addons": ["heroku-postgresql:essential-0"],
+  "scripts": {
+    "postdeploy": "npm run seed:translations:prod"
+  },
+  "env": {
+    "JWT_SECRET": {
+      "description": "Signs OTP verification tokens / hashes codes. Min 32 chars.",
+      "generator": "secret"
+    },
+    "STAFF_API_KEY": {
+      "description": "Shared secret guarding the staff endpoints (/orders*, /admin/translations*). Min 16 chars.",
+      "generator": "secret"
+    },
+    "CORS_ORIGIN": {
+      "description": "Comma-separated allowed frontend origins (client + admin). Leave empty to allow any origin (NOT recommended in production).",
+      "required": false
+    },
+    "AWS_REGION": { "description": "AWS region for the STL bucket." },
+    "S3_BUCKET": { "description": "S3 bucket name for order STL files." },
+    "AWS_ACCESS_KEY_ID": { "description": "AWS access key with S3 access." },
+    "AWS_SECRET_ACCESS_KEY": { "description": "AWS secret access key." },
+    "S3_PRESIGN_TTL_SEC": {
+      "description": "Presigned download URL lifetime in seconds.",
+      "value": "300",
+      "required": false
+    },
+    "TWILIO_ACCOUNT_SID": {
+      "description": "Twilio account SID (optional — without it OTPs are logged, not sent).",
+      "required": false
+    },
+    "TWILIO_AUTH_TOKEN": { "description": "Twilio auth token.", "required": false },
+    "TWILIO_FROM": { "description": "Twilio sender phone number.", "required": false },
+    "DB_SYNCHRONIZE": {
+      "description": "Must stay false — schema changes go through migrations.",
+      "value": "false"
+    }
+  }
+}

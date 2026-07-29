@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -12,6 +15,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "heroku-postbuild": "npm run build",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -22,7 +26,9 @@
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:generate": "npm run typeorm -- migration:generate",
-    "seed:translations": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' ts-node src/translations/seed/seed.ts"
+    "migration:run:prod": "typeorm migration:run -d dist/database/data-source.js",
+    "seed:translations": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' ts-node src/translations/seed/seed.ts",
+    "seed:translations:prod": "node dist/translations/seed/seed.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1093.0",

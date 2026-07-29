@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { buildDbConnectionOptions } from './config/database.config';
 import { validateEnv } from './config/env.validation';
 import { OrdersModule } from './orders/orders.module';
 import { OtpModule } from './otp/otp.module';
@@ -18,12 +19,7 @@ import { TranslationsModule } from './translations/translations.module';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST', 'localhost'),
-        port: Number(configService.get<string>('DB_PORT', '5432')),
-        username: configService.get<string>('DB_USERNAME', 'postgres'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE', 'canvas_jewelry'),
+        ...buildDbConnectionOptions(),
         autoLoadEntities: true,
         synchronize:
           configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',

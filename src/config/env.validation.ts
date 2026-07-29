@@ -11,6 +11,20 @@ import {
 import { Type } from 'class-transformer';
 
 export class EnvironmentVariables {
+  /**
+   * Full Postgres connection string (`postgres://…`). When set it wins over the
+   * individual DB_* vars and enables SSL — this is how Heroku Postgres and most
+   * managed providers expose credentials.
+   */
+  @IsString()
+  @IsOptional()
+  DATABASE_URL?: string;
+
+  /** Force SSL for the individual-var connection path (DATABASE_URL implies it). */
+  @IsBooleanString()
+  @IsOptional()
+  DB_SSL?: string;
+
   @IsString()
   @IsOptional()
   DB_HOST?: string;

@@ -6,13 +6,21 @@ import { Locale } from '../entities/locale.entity';
 import { Translation } from '../entities/translation.entity';
 
 /**
- * Seeds (or re-seeds) the translation tables from the flat JSON bundles in this
- * folder — the canonical strings exported from the client dictionaries by
- * `scripts/flatten-dictionaries.mjs` in the canvas-jewlery repo. Idempotent:
- * every row is upserted on (localeCode, key), so running it again only
- * overwrites values, never duplicates.
+ * Seeds the translation tables from the flat JSON bundles in this folder — the
+ * canonical strings exported from the client dictionaries by
+ * `scripts/flatten-dictionaries.mjs` in the canvas-jewlery repo.
  *
- * Run:  npm run seed:translations
+ * Default mode is INSERT-ONLY (`ON CONFLICT DO NOTHING`): it adds keys that
+ * aren't in the DB yet and leaves existing rows untouched. This makes it safe to
+ * run on every deploy (Heroku release phase) — new keys get added, but values a
+ * translator edited in the admin are never clobbered. The DB is the source of
+ * truth for existing keys; the dictionaries are the fallback + bootstrap.
+ *
+ * Set `SEED_OVERWRITE=true` to instead upsert every value (reset the DB to the
+ * dictionary contents) — use this deliberately, it discards admin edits.
+ *
+ * Run:  npm run seed:translations         (dev, ts-node)
+ *       npm run seed:translations:prod    (compiled, no ts-node — Heroku)
  */
 
 interface SeedLocale {
@@ -34,10 +42,12 @@ function readBundle(code: string): Record<string, string> {
 }
 
 async function main(): Promise<void> {
+  const overwrite = process.env.SEED_OVERWRITE === 'true';
   const ds = await dataSource.initialize();
   const localeRepo = ds.getRepository(Locale);
   const translationRepo = ds.getRepository(Translation);
 
+  // Locale metadata (labels/order) is safe to keep in sync on every run.
   await localeRepo.upsert(LOCALES, ['code']);
 
   let total = 0;
@@ -51,14 +61,28 @@ async function main(): Promise<void> {
     // Chunk to stay well under Postgres' bound-parameter ceiling.
     for (let i = 0; i < rows.length; i += 500) {
       const chunk = rows.slice(i, i + 500);
-      await translationRepo.upsert(chunk, ['localeCode', 'key']);
+      if (overwrite) {
+        await translationRepo.upsert(chunk, ['localeCode', 'key']);
+      } else {
+        // INSERT … ON CONFLICT (localeCode, key) DO NOTHING — preserves any
+        // value edited in the admin, only fills in keys that don't exist yet.
+        await translationRepo
+          .createQueryBuilder()
+          .insert()
+          .values(chunk)
+          .orIgnore()
+          .execute();
+      }
     }
     total += rows.length;
     console.log(`  ${locale.code}: ${rows.length} keys`);
   }
 
   await ds.destroy();
-  console.log(`Seeded ${total} translation rows across ${LOCALES.length} locales.`);
+  console.log(
+    `Seeded ${total} keys across ${LOCALES.length} locales ` +
+      `(${overwrite ? 'overwrite' : 'insert-only'} mode).`,
+  );
 }
 
 main().catch((err) => {
