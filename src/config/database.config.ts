@@ -33,6 +33,16 @@ export function buildDbConnectionOptions(
     return { type: 'postgres', url, ssl };
   }
 
+  // On a Heroku dyno (DYNO is always set there) with no DATABASE_URL, we would
+  // silently fall back to localhost and fail with a cryptic ECONNREFUSED. Make
+  // the real cause obvious instead: the Postgres addon isn't attached.
+  if (env.DYNO && !env.DB_HOST) {
+    throw new Error(
+      'DATABASE_URL is not set. Attach Heroku Postgres: ' +
+        '`heroku addons:create heroku-postgresql:essential-0`',
+    );
+  }
+
   return {
     type: 'postgres',
     host: env.DB_HOST ?? 'localhost',
